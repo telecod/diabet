@@ -1,0 +1,305 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API для мониторинга диабета",
+    "description": "API для управления данными о сахаре в крови и статистикой для пользователей и администраторов. Развернуто на удаленном сервере 85.92.111.109.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    { "url": "http://85.92.111.109:3000/api", "description": "Удаленный сервер" }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Регистрация нового пользователя",
+        "description": "Создает нового пользователя с указанным логином, email и паролем.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login": { "type": "string", "description": "Уникальный логин" },
+                  "email": { "type": "string", "description": "Электронная почта" },
+                  "password": { "type": "string", "description": "Пароль (минимум 6 символов)" }
+                },
+                "required": ["login", "email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Пользователь успешно зарегистрирован", "content": { "application/json": { "example": { "message": "Пользователь успешно зарегистрирован", "userId": 1 } } } },
+          "400": { "description": "Неверные входные данные или пользователь уже существует", "content": { "application/json": { "example": { "message": "Логин уже занят" } } } }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Вход пользователя",
+        "description": "Аутентификация пользователя по логину и паролю с выдачей JWT токена.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login": { "type": "string", "description": "Логин пользователя" },
+                  "password": { "type": "string", "description": "Пароль" }
+                },
+                "required": ["login", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Успешный вход, возвращается JWT токен", "content": { "application/json": { "example": { "token": "<JWT_токен>" } } } },
+          "400": { "description": "Неверные учетные данные", "content": { "application/json": { "example": { "message": "Неверный логин или пароль" } } } }
+        }
+      }
+    },
+    "/auth/change-password": {
+      "post": {
+        "summary": "Смена пароля",
+        "description": "Изменяет пароль пользователя после проверки текущего пароля.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "currentPassword": { "type": "string", "description": "Текущий пароль" },
+                  "newPassword": { "type": "string", "description": "Новый пароль (минимум 6 символов)" }
+                },
+                "required": ["currentPassword", "newPassword"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Пароль успешно изменен", "content": { "application/json": { "example": { "message": "Пароль успешно изменен" } } } },
+          "400": { "description": "Неверные входные данные или текущий пароль", "content": { "application/json": { "example": { "message": "Неверный текущий пароль" } } } },
+          "401": { "description": "Требуется аутентификация", "content": { "application/json": { "example": { "message": "Требуется аутентификация" } } } }
+        }
+      }
+    },
+    "/auth/change-email": {
+      "post": {
+        "summary": "Смена email",
+        "description": "Изменяет email пользователя.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "description": "Новый email" }
+                },
+                "required": ["email"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Email успешно изменен", "content": { "application/json": { "example": { "message": "Email успешно изменен" } } } },
+          "400": { "description": "Неверный формат email или email занят", "content": { "application/json": { "example": { "message": "Email уже занят" } } } },
+          "401": { "description": "Требуется аутентификация", "content": { "application/json": { "example": { "message": "Требуется аутентификация" } } } }
+        }
+      }
+    },
+    "/auth/change-login": {
+      "post": {
+        "summary": "Смена логина",
+        "description": "Изменяет логин пользователя.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "login": { "type": "string", "description": "Новый логин (минимум 3 символа)" }
+                },
+                "required": ["login"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Логин успешно изменен", "content": { "application/json": { "example": { "message": "Логин успешно изменен" } } } },
+          "400": { "description": "Неверный формат логина или логин занят", "content": { "application/json": { "example": { "message": "Логин уже занят" } } } },
+          "401": { "description": "Требуется аутентификация", "content": { "application/json": { "example": { "message": "Требуется аутентификация" } } } }
+        }
+      }
+    },
+    "/sugar": {
+      "post": {
+        "summary": "Добавить показатель сахара",
+        "description": "Создает новую запись о уровне сахара для аутентифицированного пользователя. Ограничение: не чаще одного раза в 5 минут.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sugarLevel": { "type": "number", "description": "Уровень сахара в крови (ммоль/л)" },
+                  "readingDate": { "type": "string", "format": "date", "description": "Дата измерения (ГГГГ-ММ-ДД)" },
+                  "description": { "type": "string", "description": "Описание состояния (опционально)" }
+                },
+                "required": ["sugarLevel", "readingDate"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Запись создана", "content": { "application/json": { "example": { "message": "Запись создана", "readingId": 1 } } } },
+          "400": { "description": "Неверные входные данные", "content": { "application/json": { "example": { "message": "Уровень сахара обязателен" } } } },
+          "429": { "description": "Слишком частые запросы. Подождите несколько минут перед добавлением новой записи.", "content": { "application/json": { "example": { "message": "Слишком частые запросы. Пожалуйста, подождите 5 минут(ы) перед добавлением новой записи." } } } },
+          "401": { "description": "Требуется аутентификация", "content": { "application/json": { "example": { "message": "Требуется аутентификация" } } } }
+        }
+      },
+      "get": {
+        "summary": "Получить показатели пользователя",
+        "description": "Возвращает список всех записей о сахаре для аутентифицированного пользователя.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Список записей", "content": { "application/json": { "example": [{ "id": 1, "user_id": 1, "sugar_level": 5.5, "reading_date": "2025-05-27", "description": "После просмотра", "created_at": "2025-05-27T19:41:00.000Z", "updated_at": "2025-05-27T19:41:00.000Z" }] } } },
+          "400": { "description": "Ошибка", "content": { "application/json": { "example": { "message": "Ошибка" } } } },
+          "401": { "description": "Требуется аутентификация", "content": { "application/json": { "example": { "message": "Требуется аутентификация" } } } }
+        }
+      }
+    },
+    "/sugar/{id}": {
+      "put": {
+        "summary": "Обновить показатель сахара",
+        "description": "Обновляет существующую запись о сахаре для аутентифицированного пользователя.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID записи" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sugarLevel": { "type": "number", "description": "Уровень сахара в крови (ммоль/л)" },
+                  "readingDate": { "type": "string", "format": "date", "description": "Дата измерения (ГГГГ-ММ-ДД)" },
+                  "description": { "type": "string", "description": "Описание состояния (опционально)" }
+                },
+                "required": ["sugarLevel", "readingDate"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Запись обновлена", "content": { "application/json": { "example": { "message": "Запись обновлена" } } } },
+          "404": { "description": "Запись не найдена или доступ запрещен", "content": { "application/json": { "example": { "message": "Запись не найдена или доступ запрещен" } } } },
+          "401": { "description": "Требуется аутентификация", "content": { "application/json": { "example": { "message": "Требуется аутентификация" } } } }
+        }
+      },
+      "delete": {
+        "summary": "Удалить показатель сахара",
+        "description": "Удаляет запись о сахаре для аутентифицированного пользователя.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "ID записи" }
+        ],
+        "responses": {
+          "200": { "description": "Запись удалена", "content": { "application/json": { "example": { "message": "Запись удалена" } } } },
+          "404": { "description": "Запись не найдена или доступ запрещен", "content": { "application/json": { "example": { "message": "Запись не найдена или доступ запрещен" } } } },
+          "401": { "description": "Требуется аутентификация", "content": { "application/json": { "example": { "message": "Требуется аутентификация" } } } }
+        }
+      }
+    },
+    "/admin/readings": {
+      "get": {
+        "summary": "Получить все показатели (только для админа)",
+        "description": "Возвращает список всех записей о сахаре всех пользователей.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Список всех записей", "content": { "application/json": { "example": [{ "id": 1, "user_id": 1, "sugar_level": 5.5, "reading_date": "2025-05-27", "description": "После просмотра", "created_at": "2025-05-27T19:41:00.000Z", "updated_at": "2025-05-27T19:41:00.000Z", "login": "daniil123", "email": "string@gmaail.com" }] } } },
+          "403": { "description": "Требуется роль администратора", "content": { "application/json": { "example": { "message": "Требуется роль администратора" } } } },
+          "401": { "description": "Требуется аутентификация", "content": { "application/json": { "example": { "message": "Требуется аутентификация" } } } }
+        }
+      }
+    },
+    "/admin/user-readings": {
+      "post": {
+        "summary": "Получить показатели пользователя (только для админа)",
+        "description": "Возвращает список записей о сахаре для пользователя по логину или ID.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "identifier": { "type": "string", "description": "Логин или ID пользователя" }
+                },
+                "required": ["identifier"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Список записей пользователя", "content": { "application/json": { "example": { "user": { "id": 1, "login": "daniil123", "email": "string@gmaail.com" }, "readings": [{ "id": 1, "user_id": 1, "sugar_level": 5.5, "reading_date": "2025-05-27", "description": "После просмотра", "created_at": "2025-05-27T19:41:00.000Z", "updated_at": "2025-05-27T19:41:00.000Z" }] } } } },
+          "404": { "description": "Пользователь не найден", "content": { "application/json": { "example": { "message": "Пользователь не найден" } } } },
+          "400": { "description": "Неверные входные данные", "content": { "application/json": { "example": { "message": "Логин или ID пользователя обязательны" } } } },
+          "403": { "description": "Требуется роль администратора", "content": { "application/json": { "example": { "message": "Требуется роль администратора" } } } },
+          "401": { "description": "Требуется аутентификация", "content": { "application/json": { "example": { "message": "Требуется аутентификация" } } } }
+        }
+      }
+    },
+    "/admin/change-user-password": {
+      "post": {
+        "summary": "Смена пароля пользователя (только для админа)",
+        "description": "Изменяет пароль пользователя по логину или ID.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "identifier": { "type": "string", "description": "Логин или ID пользователя" },
+                  "newPassword": { "type": "string", "description": "Новый пароль (минимум 6 символов)" }
+                },
+                "required": ["identifier", "newPassword"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Пароль успешно изменен", "content": { "application/json": { "example": { "message": "Пароль пользователя успешно изменен" } } } },
+          "404": { "description": "Пользователь не найден", "content": { "application/json": { "example": { "message": "Пользователь не найден" } } } },
+          "400": { "description": "Неверные входные данные", "content": { "application/json": { "example": { "message": "Новый пароль обязателен" } } } },
+          "403": { "description": "Требуется роль администратора", "content": { "application/json": { "example": { "message": "Требуется роль администратора" } } } },
+          "401": { "description": "Требуется аутентификация", "content": { "application/json": { "example": { "message": "Требуется аутентификация" } } } }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT токен для аутентификации"
+      }
+    }
+  }
+}
